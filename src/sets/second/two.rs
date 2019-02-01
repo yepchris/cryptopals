@@ -1,7 +1,4 @@
 use crate::util::*;
-use crypto::aes::{self, KeySize};
-use crypto::symmetriccipher::SynchronousStreamCipher;
-use crypto::{blockmodes, buffer};
 
 pub fn run(fname: &str, key: &str, iv: &str) -> Result<String, Box<std::error::Error>> {
     let b64 = std::fs::read_to_string(fname)?.replace("\n", "");

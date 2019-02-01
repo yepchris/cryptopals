@@ -10,12 +10,12 @@ pub mod freq;
 
 pub fn aes_ecb_decrypt(
     ct: &[u8],
-    pt: &mut [u8],
     key: &[u8],
 ) -> Result<Vec<u8>, SymmetricCipherError> {
+    let mut pt: Vec<u8> = vec![0u8; ct.len()];
     aes::ecb_decryptor(aes::KeySize::KeySize128, &key, blockmodes::NoPadding).decrypt(
         &mut buffer::RefReadBuffer::new(&ct),
-        &mut buffer::RefWriteBuffer::new(pt),
+        &mut buffer::RefWriteBuffer::new(&mut pt),
         true,
     )?;
     Ok(pt.to_vec())
@@ -23,12 +23,12 @@ pub fn aes_ecb_decrypt(
 
 pub fn aes_ecb_encrypt(
     pt: &[u8],
-    ct: &mut [u8],
     key: &[u8],
 ) -> Result<Vec<u8>, SymmetricCipherError> {
+    let mut ct = vec![0u8; pt.len()];
     aes::ecb_encryptor(aes::KeySize::KeySize128, &key, blockmodes::PkcsPadding).encrypt(
         &mut buffer::RefReadBuffer::new(&pt),
-        &mut buffer::RefWriteBuffer::new(ct),
+        &mut buffer::RefWriteBuffer::new(&mut ct),
         true,
     )?;
     Ok(ct.to_vec())
@@ -42,7 +42,7 @@ pub fn aes_cbc_encrypt(pt: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Symm
     for i in (0..pt.len()).step_by(16) {
         let pt_block = pt[i..i + 16].to_vec();
         let input_block = xor(&pt_block, &prev_block);
-        aes_ecb_encrypt(&input_block, &mut ct_block, key)?;
+        ct_block = aes_ecb_encrypt(&input_block, key)?;
         ct.append(&mut ct_block.to_owned());
         prev_block = &ct_block;
     }
@@ -56,7 +56,7 @@ pub fn aes_cbc_decrypt(ct: &[u8], key: &[u8], iv: &[u8]) -> Result<Vec<u8>, Symm
     let mut pt = vec![];
 
     for i in (0..ct.len()).step_by(16) {
-        aes_ecb_decrypt(&ct[i..i + 16], &mut pt_block, key)?;
+        pt_block = aes_ecb_decrypt(&ct[i..i + 16], key)?;
         let output_block = xor(&pt_block, &prev_block);
         pt.append(&mut output_block.to_owned());
         prev_block = &ct[i..i + 16];
