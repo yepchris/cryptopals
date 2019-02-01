@@ -21,7 +21,9 @@ fn prepare(pt: &[u8]) -> Vec<u8> {
     for i in 0..prepend {
         modified.push(i as u8)
     }
-    pt.iter().map(|b| modified.push(*b));
+    for b in pt {
+        modified.push(*b)
+    }
     for i in 0..append {
         modified.push(i as u8)
     }
@@ -32,7 +34,6 @@ fn prepare(pt: &[u8]) -> Vec<u8> {
 fn encryption_oracle(pt: &[u8], cbc_or_not: bool) -> Vec<u8> {
     let mut rng = rand::thread_rng();
     let key = rng.gen::<[u8; 16]>();
-
     let pt_prepared = prepare(&pt);
 
     if cbc_or_not {
@@ -43,14 +44,18 @@ fn encryption_oracle(pt: &[u8], cbc_or_not: bool) -> Vec<u8> {
 }
 
 pub fn id_algo(ct: &[u8]) -> bool {
-    // TODO: implement algorithm check
-    let is_cbc = false;
+    let mut is_cbc = true;
+    let matches = match_blocks(&ct, 16);
+
+    if matches > 0 {
+        is_cbc = false
+    }
+
     is_cbc
 }
 
 pub fn run(b64: &str, cbc_or_not: bool) -> bool {
     let pt = base64::decode(&b64).unwrap();
     let ct = encryption_oracle(&pt, cbc_or_not);
-
     id_algo(&ct)
 }

@@ -8,10 +8,7 @@ use rand::{OsRng, Rng, RngCore};
 use std::io::{BufReader, BufWriter};
 pub mod freq;
 
-pub fn aes_ecb_decrypt(
-    ct: &[u8],
-    key: &[u8],
-) -> Result<Vec<u8>, SymmetricCipherError> {
+pub fn aes_ecb_decrypt(ct: &[u8], key: &[u8]) -> Result<Vec<u8>, SymmetricCipherError> {
     let mut pt: Vec<u8> = vec![0u8; ct.len()];
     aes::ecb_decryptor(aes::KeySize::KeySize128, &key, blockmodes::NoPadding).decrypt(
         &mut buffer::RefReadBuffer::new(&ct),
@@ -21,10 +18,30 @@ pub fn aes_ecb_decrypt(
     Ok(pt.to_vec())
 }
 
-pub fn aes_ecb_encrypt(
-    pt: &[u8],
-    key: &[u8],
-) -> Result<Vec<u8>, SymmetricCipherError> {
+pub fn match_blocks(ct: &[u8], block_size: usize) -> usize {
+    let ct_len = ct.len();
+    let mut chunks = vec![];
+    let mut matches = 0;
+
+    for i in (0..ct.len()).step_by(block_size) {
+        let j = i + block_size;
+        if j >= ct_len {
+            break;
+        }
+        chunks.push(ct[i..j].to_vec());
+    }
+
+    for (i, chunk) in chunks.iter().enumerate() {
+        for remaining in i + 1..chunks.len() {
+            if chunk == &chunks[remaining] {
+                matches += 1;
+            }
+        }
+    }
+    matches
+}
+
+pub fn aes_ecb_encrypt(pt: &[u8], key: &[u8]) -> Result<Vec<u8>, SymmetricCipherError> {
     let mut ct = vec![0u8; pt.len()];
     aes::ecb_encryptor(aes::KeySize::KeySize128, &key, blockmodes::PkcsPadding).encrypt(
         &mut buffer::RefReadBuffer::new(&pt),
@@ -78,14 +95,44 @@ pub fn brute_char(chunk: &[u8]) -> (u8, f64, Vec<u8>) {
     most_likely
 }
 
-pub fn hamming(str_1: &[u8], str_2: &[u8]) -> Option<usize> {
-    if str_1.len() != str_2.len() {
+pub fn mean_hamming(input: &[u8], block_size: usize, block_limit: usize) -> Option<f64> {
+    let input_len = input.len();
+
+    let mut chunks = vec![];
+    let mut distances = 0;
+
+    for i in (0..input_len).step_by(block_size) {
+        let j = i + block_size;
+        if j >= input_len || chunks.len() == block_limit {
+            break;
+        }
+        chunks.push(input[i..j].to_vec());
+    }
+
+    let num_chunks = chunks.len();
+    let mut num_distances = 0;
+
+    // sum distances between all chunks
+    for i in 0..num_chunks - 1 {
+        for j in 0..num_chunks - 1 {
+            if i < j + 1 {
+                distances += util::hamming(&chunks[i], &chunks[j + 1]).unwrap();
+                num_distances += 1;
+            }
+        }
+    }
+
+    let avg = distances as f64 / num_distances as f64;
+    Some(avg / block_size as f64)
+}
+
+pub fn hamming(in_1: &[u8], in_2: &[u8]) -> Option<usize> {
+    if in_1.len() != in_2.len() {
         None
     } else {
         Some(
-            str_1
-                .iter()
-                .zip(str_2)
+            in_1.iter()
+                .zip(in_2)
                 .fold(0, |a, (b, c)| a + (*b ^ *c).count_ones() as usize),
         )
     }

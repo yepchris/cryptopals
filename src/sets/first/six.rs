@@ -1,4 +1,4 @@
-use crate::util;
+use crate::util::*;
 
 pub fn run(fname: &str) -> Result<String, Box<std::error::Error>> {
     let b64 = std::fs::read_to_string(fname)?.replace("\n", "");
@@ -8,42 +8,24 @@ pub fn run(fname: &str) -> Result<String, Box<std::error::Error>> {
     let mut lowest_distance = 0.0;
     let mut key = vec![];
 
-    for keysize in 2..40 {
-        let mut chunks = vec![];
-        let mut distances = 0;
+    // normalized, mean Hamming distance among 4 blocks should be enough
+    let block_limit = 4;
+    for key_size in 2..40 {
+        let normalized_hamming = match mean_hamming(&ct, key_size, block_limit) {
+            Some(h) => h,
+            None => continue,
+        };
 
-        // get 4 chunks
-        let i = 0;
-        for i in 0..4 {
-            let j = keysize * (i + 1);
-            if j >= ct_len {
-                break;
-            }
-            chunks.push(ct[keysize * i..j].to_vec());
-        }
-
-        // sum distances between all chunks
-        for i in 0..3 {
-            for j in 0..3 {
-                if i < j + 1 {
-                    distances += util::hamming(&chunks[i], &chunks[j + 1]).unwrap();
-                }
-            }
-        }
-
-        let avg = distances as f64 / 6.0;
-        let normalized = avg / keysize as f64;
-
-        if normalized < lowest_distance || lowest_distance == 0.0 {
-            lowest_distance = normalized;
-            likely_keysize = keysize;
+        if normalized_hamming < lowest_distance || lowest_distance == 0.0 {
+            lowest_distance = normalized_hamming;
+            likely_keysize = key_size;
         }
     }
 
-    for chunk in util::transpose(&ct.clone(), likely_keysize).iter() {
-        key.push(util::brute_char(&chunk).0);
+    for chunk in transpose(&ct.clone(), likely_keysize).iter() {
+        key.push(brute_char(&chunk).0);
     }
 
-    let pt = util::xor(&ct, &key);
+    let pt = xor(&ct, &key);
     Ok(std::str::from_utf8(&pt)?.to_string())
 }
