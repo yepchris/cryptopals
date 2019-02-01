@@ -1,0 +1,11 @@
+[package]
+name = "cryptopals"
+version = "0.1.0"
+authors = ["yepchris"]
+edition = "2018"
+
+[dependencies]
+base64 = "0.10.1"
+hex = "0.3.2"
+rust-crypto = "^0.2"
+rand = "0.6.5"
