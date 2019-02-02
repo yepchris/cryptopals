@@ -1,23 +1,23 @@
-mod one;
-mod three;
-mod two;
+mod eleven;
+mod nine;
+mod ten;
 
 #[cfg(test)]
 mod tests {
-    use super::{one, three, two};
+    use super::{eleven, nine, ten};
 
     #[test]
-    fn one() {
+    fn nine() {
         assert_eq!(
-            one::run("YELLOW SUBMARINE", 20).unwrap(),
+            nine::run("YELLOW SUBMARINE", 20).unwrap(),
             "YELLOW SUBMARINE\x04\x04\x04\x04"
         );
     }
 
     #[test]
-    fn two() {
+    fn ten() {
         assert_eq!(
-            two::run(
+            ten::run(
                 "data/second/2.txt",
                 "YELLOW SUBMARINE",
                 "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -28,11 +28,11 @@ mod tests {
     }
 
     #[test]
-    fn three() {
+    fn eleven() {
         use rand::Rng;
         let cbc_or_not = rand::thread_rng().gen::<bool>();
         let pt = "0123456789abcdef0123456789abcdef0123456789abcdef".as_bytes();
-        assert_eq!(three::run(&base64::encode(&pt), cbc_or_not), cbc_or_not);
+        assert_eq!(eleven::run(&base64::encode(&pt), cbc_or_not), cbc_or_not);
     }
 
 }
