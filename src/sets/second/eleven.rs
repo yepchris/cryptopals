@@ -16,19 +16,19 @@ fn prepare(pt: &[u8]) -> Vec<u8> {
     let prepend = rng.gen_range(5, 11);
     let append = rng.gen_range(5, 11);
 
-    let mut modified = vec![];
+    let mut out = vec![];
 
     for i in 0..prepend {
-        modified.push(i as u8)
+        out.push(i as u8)
     }
     for b in pt {
-        modified.push(*b)
+        out.push(*b)
     }
     for i in 0..append {
-        modified.push(i as u8)
+        out.push(i as u8)
     }
 
-    pad_pkcs7(&modified, 16)
+    pad_pkcs7(&out, 16)
 }
 
 fn encryption_oracle(pt: &[u8], cbc_or_not: bool) -> Vec<u8> {

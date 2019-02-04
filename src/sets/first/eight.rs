@@ -11,7 +11,7 @@ pub fn run(fname: &str) -> Result<String, Box<std::error::Error>> {
             Ok(hex_str) => {
                 hex::decode(hex_str).and_then(|ct| {
                     let matches = match_blocks(&ct, 16);
-                    
+
                     if matches > high_match {
                         high_match = matches;
                         likely_ecb = ct.to_vec();

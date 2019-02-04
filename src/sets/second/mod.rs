@@ -1,10 +1,12 @@
 mod eleven;
 mod nine;
 mod ten;
+mod thirteen;
+mod twelve;
 
 #[cfg(test)]
 mod tests {
-    use super::{eleven, nine, ten};
+    use super::{eleven, nine, ten, thirteen, twelve};
 
     #[test]
     fn nine() {
@@ -33,6 +35,44 @@ mod tests {
         let cbc_or_not = rand::thread_rng().gen::<bool>();
         let pt = "0123456789abcdef0123456789abcdef0123456789abcdef".as_bytes();
         assert_eq!(eleven::run(&base64::encode(&pt), cbc_or_not), cbc_or_not);
+    }
+
+    #[test]
+    fn twelve() {
+        use rand::Rng;
+        let key = rand::thread_rng().gen::<[u8; 16]>();
+        assert_eq!(
+            twelve::run(
+                "Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK",
+                &base64::encode(&key)
+            ).unwrap(),
+            (16, true, "Rollin' in my 5.0
+With my rag-top down so my hair can blow
+The girlies on standby waving just to say hi
+Did you stop? No, I just drove by
+".to_string())
+        );
+    }
+
+    #[test]
+    fn thirteen() {
+        assert_eq!(
+            thirteen::run("foos@ball.com&role=admin").unwrap(),
+            ((
+                "{
+\temail: 'foos@ball.comroleadmin',
+\tuid: '10',
+\trole: 'user'
+}"
+                .to_string(),
+                "{
+\temail: 'foos@ball.com',
+\tuid: '10',
+\trole: 'admin'
+}"
+                .to_string()
+            ))
+        );
     }
 
 }
